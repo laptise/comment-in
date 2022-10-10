@@ -2,19 +2,45 @@
 version: "3.8"
 services:
 
-  ci_nginx:
-    tty: true
-    image: nginx:1.21-alpine
-    container_name: dl_nginx
-    ports:
-      - "80:80"
+  # Next.jsクライアント・サーバー
+  next:
+    container_name: ci_next
+    build:
+      context: .
+      dockerfile: client.Dockerfile
+    environment:
+      TZ: Asia/Tokyo
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d
+      - ./next:/usr/src/app
+      - ./types:/usr/src/types #共通型定義ファイル
+    command: 'yarn dev'
+    ports:
+      - "19000:3000"
     depends_on:
-      - ci_client
+      - nest
 
-  ci_db:
-    container_name: dl_db
+  # Nest.jsサーバー
+  nest:
+    container_name: ci_nest
+    tty: true
+    build:
+      context: .
+      dockerfile: server.Dockerfile
+    environment:
+      TZ: Asia/Tokyo
+    command: 'nest start --watch'
+    volumes:
+      - ./nest:/usr/src/app
+      - ./types:/usr/src/types #共通型定義ファイル
+    ports:
+      - "19001:3000"
+    depends_on:
+      - mysql
+    expose:
+      - 19001
+
+  mysql:
+    container_name: ci_db
     platform: linux/amd64
     image: mysql:8
     restart: always
@@ -35,39 +61,13 @@ services:
     healthcheck:
       test: mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD
 
-  # Nest.jsサーバー
-  ci_server:
-    container_name: dl_server
+  ci_nginx:
     tty: true
-    build:
-      context: .
-      dockerfile: server.Dockerfile
-    environment:
-      TZ: Asia/Tokyo
-    command: 'nest start --watch'
-    volumes:
-      - ./nest:/usr/src/app
-      - ./types:/usr/src/types #共通型定義ファイル
+    container_name: ci_nginx
+    image: nginx:1.21-alpine
     ports:
-      - "19001:3000"
-    depends_on:
-      - ci_db
-    expose:
-      - 19001
-
-  # Next.jsクライアント・サーバー
-  ci_client:
-    container_name: dl_client
-    build:
-      context: .
-      dockerfile: client.Dockerfile
-    environment:
-      TZ: Asia/Tokyo
+      - "80:80"
     volumes:
-      - ./next:/usr/src/app
-      - ./types:/usr/src/types #共通型定義ファイル
-    command: 'yarn dev'
-    ports:
-      - "19000:3000"
+      - ./nginx/default.conf:/etc/nginx/conf.d
     depends_on:
-      - ci_server
+      - next
