@@ -14,7 +14,9 @@ services:
       - ./next:/usr/src/app
       - ./types:/usr/src/types #共通型定義ファイル
       - ./.env:/.env
-    command: 'yarn env:copy && yarn dev'
+    command: >
+      bash -c "yarn env &&
+       yarn dev"
     ports:
       - "19000:3000"
     depends_on:
@@ -29,10 +31,13 @@ services:
       dockerfile: server.Dockerfile
     environment:
       TZ: Asia/Tokyo
-    command: 'nest start --watch'
+    command: > 
+      bash -c "yarn env &&
+       yarn start:dev"
     volumes:
       - ./nest:/usr/src/app
       - ./types:/usr/src/types #共通型定義ファイル
+      - ./.env:/.env
     ports:
       - "19001:3000"
     depends_on:
