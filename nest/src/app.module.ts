@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { Commentee } from './commentee/commentee';
 import { CommenteeModule } from './commentee/commentee.module';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import { User } from './user/user';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       synchronize: true,
-      entities: [Commentee],
+      entities: [Commentee, User],
       namingStrategy: new SnakeNamingStrategy(),
     }),
     CommenteeModule,
