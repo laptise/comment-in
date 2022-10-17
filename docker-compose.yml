@@ -13,7 +13,8 @@ services:
     volumes:
       - ./next:/usr/src/app
       - ./types:/usr/src/types #共通型定義ファイル
-    command: 'yarn dev'
+      - ./.env:/.env
+    command: 'yarn env:copy && yarn dev'
     ports:
       - "19000:3000"
     depends_on:
